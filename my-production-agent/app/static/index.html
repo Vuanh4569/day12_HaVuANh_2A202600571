@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production AI Agent Console</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: rgba(17, 24, 39, 0.7);
+            --bg-card: rgba(31, 41, 55, 0.4);
+            --accent-glow: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --accent-purple: #a855f7;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .logo-section h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--accent-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-section p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            box-shadow: 0 0 8px var(--text-muted);
+        }
+
+        .status-dot.online {
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .status-dot.offline {
+            background-color: var(--error);
+            box-shadow: 0 0 10px var(--error);
+        }
+
+        .status-dot.loading {
+            background-color: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        /* Main Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphic Cards */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 40px 0 rgba(99, 102, 241, 0.1);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title svg {
+            color: var(--accent-purple);
+        }
+
+        /* Forms / Inputs */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-purple);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: var(--accent-glow);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(168, 85, 247, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            box-shadow: none;
+            margin-top: 8px;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-muted);
+            box-shadow: none;
+        }
+
+        /* Chat Window */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 550px;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            margin-bottom: 1rem;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.925rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.agent {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message.system {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            align-self: center;
+            max-width: 90%;
+            font-size: 0.8rem;
+            text-align: center;
+            border-radius: 6px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input-area input {
+            flex-grow: 1;
+        }
+
+        .chat-input-area .btn {
+            width: auto;
+            padding: 0 24px;
+        }
+
+        /* Stress Testing Grid */
+        .stress-test-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 1rem;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .grid-cell.success {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            color: #34d399;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .grid-cell.ratelimit {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+            color: #fca5a5;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+
+        .grid-cell.pending {
+            border-color: var(--warning);
+            animation: pulse-border 1s infinite alternate;
+        }
+
+        @keyframes pulse-border {
+            from { border-color: rgba(245, 158, 11, 0.2); }
+            to { border-color: rgba(245, 158, 11, 1); }
+        }
+
+        /* JSON Inspector */
+        pre {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            max-height: 250px;
+            color: #34d399;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1>AI Agent Control Console</h1>
+                <p>Môi trường kiểm thử bảo mật & hiệu năng Day 12</p>
+            </div>
+            <div class="status-indicators">
+                <div class="status-badge">
+                    Liveness: <span id="liveness-dot" class="status-dot"></span>
+                    <strong id="liveness-text">CHECKING</strong>
+                </div>
+                <div class="status-badge">
+                    Readiness: <span id="readiness-dot" class="status-dot"></span>
+                    <strong id="readiness-text">CHECKING</strong>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Left Column: Config & Operations -->
+            <div class="config-column">
+                <div class="card">
+                    <div class="card-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        Cấu hình API
+                    </div>
+                    <div class="form-group">
+                        <label for="api-url">Base URL Endpoint</label>
+                        <input type="text" id="api-url" class="form-input" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label for="api-key">X-API-Key</label>
+                        <input type="password" id="api-key" class="form-input" value="dev-key-change-me-in-production">
+                    </div>
+                    <button id="btn-save-config" class="btn">Áp Dụng Cấu Hình</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Stress Test (Rate Limiting)
+                    </div>
+                    <p class="stress-test-info">
+                        Gửi đồng thời 25 requests liên tiếp đến API để kiểm tra bộ lọc Rate Limiter (Giới hạn: 20 req/phút).
+                    </p>
+                    <button id="btn-stress-test" class="btn btn-outline">Kích Hoạt Rate Limit Test</button>
+                    <div id="stress-results" class="results-grid">
+                        <!-- cells injected by JS -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Hệ thống & Chi phí
+                    </div>
+                    <button id="btn-fetch-metrics" class="btn btn-outline" style="margin-bottom: 12px;">Xem Thống Kê / Metrics</button>
+                    <pre id="metrics-output">{}</pre>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Chat UI -->
+            <div class="chat-column">
+                <div class="card chat-container">
+                    <div class="card-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        Trò chuyện với AI Agent
+                    </div>
+                    
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="message agent">
+                            Chào bạn! Tôi là Production AI Agent đã được triển khai. Tôi hỗ trợ bảo mật xác thực và bảo vệ chi phí API. Bạn muốn hỏi tôi điều gì?
+                        </div>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" class="form-input" placeholder="Nhập câu hỏi tại đây..." onkeydown="if(event.key === 'Enter') sendMessage()">
+                        <button id="btn-send" class="btn" onclick="sendMessage()">Gửi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tự động detect URL của server đang chạy UI
+        const defaultUrl = window.location.origin;
+        document.getElementById('api-url').value = defaultUrl;
+
+        let API_URL = defaultUrl;
+        let API_KEY = document.getElementById('api-key').value;
+
+        // Lưu cấu hình
+        document.getElementById('btn-save-config').addEventListener('click', () => {
+            API_URL = document.getElementById('api-url').value.replace(/\/$/, "");
+            API_KEY = document.getElementById('api-key').value;
+            alert("Đã cập nhật cấu hình kiểm thử!");
+            checkHealth();
+        });
+
+        // Hàm kiểm tra liveness và readiness định kỳ
+        async function checkHealth() {
+            const livenessDot = document.getElementById('liveness-dot');
+            const livenessText = document.getElementById('liveness-text');
+            const readinessDot = document.getElementById('readiness-dot');
+            const readinessText = document.getElementById('readiness-text');
+
+            // Set states to checking
+            livenessDot.className = 'status-dot loading';
+            livenessText.innerText = 'CHECKING...';
+            readinessDot.className = 'status-dot loading';
+            readinessText.innerText = 'CHECKING...';
+
+            try {
+                const liveRes = await fetch(`${API_URL}/health`);
+                if (liveRes.ok) {
+                    livenessDot.className = 'status-dot online';
+                    livenessText.innerText = 'ONLINE (200)';
+                } else {
+                    livenessDot.className = 'status-dot offline';
+                    livenessText.innerText = `ERROR (${liveRes.status})`;
+                }
+            } catch (err) {
+                livenessDot.className = 'status-dot offline';
+                livenessText.innerText = 'OFFLINE';
+            }
+
+            try {
+                const readyRes = await fetch(`${API_URL}/ready`);
+                if (readyRes.ok) {
+                    readinessDot.className = 'status-dot online';
+                    readinessText.innerText = 'READY (200)';
+                } else {
+                    readinessDot.className = 'status-dot offline';
+                    readinessText.innerText = `DEGRADED (${readyRes.status})`;
+                }
+            } catch (err) {
+                readinessDot.className = 'status-dot offline';
+                readinessText.innerText = 'UNREACHABLE';
+            }
+        }
+
+        // Chạy kiểm tra liveness / readiness ngay khi load trang
+        checkHealth();
+        setInterval(checkHealth, 15000); // Tự động cập nhật mỗi 15s
+
+        // Gửi tin nhắn chat
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            input.value = "";
+            appendMessage('user', question);
+
+            const msgDiv = appendMessage('agent', 'AI đang trả lời...');
+            
+            try {
+                const response = await fetch(`${API_URL}/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    msgDiv.innerText = data.answer;
+                } else {
+                    msgDiv.className = 'message system';
+                    msgDiv.innerText = `[Lỗi ${response.status}] ${data.detail || JSON.stringify(data)}`;
+                }
+            } catch (err) {
+                msgDiv.className = 'message system';
+                msgDiv.innerText = `Không thể kết nối đến server API: ${err.message}`;
+            }
+        }
+
+        function appendMessage(role, text) {
+            const chatMessages = document.getElementById('chat-messages');
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+            msg.innerText = text;
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msg;
+        }
+
+        // Kích hoạt Stress Test cho Rate Limiting
+        document.getElementById('btn-stress-test').addEventListener('click', async () => {
+            const grid = document.getElementById('stress-results');
+            grid.innerHTML = "";
+            
+            // Tạo 25 ô trạng thái pending
+            const cells = [];
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell pending';
+                cell.innerText = i + 1;
+                grid.appendChild(cell);
+                cells.push(cell);
+            }
+
+            // Gửi 25 requests đồng thời
+            const promises = Array.from({ length: 25 }).map(async (_, index) => {
+                try {
+                    const res = await fetch(`${API_URL}/ask`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': API_KEY
+                        },
+                        body: JSON.stringify({ question: `Stress test request ${index}` })
+                    });
+                    
+                    if (res.status === 200) {
+                        cells[index].className = 'grid-cell success';
+                        cells[index].innerText = '200';
+                    } else if (res.status === 429) {
+                        cells[index].className = 'grid-cell ratelimit';
+                        cells[index].innerText = '429';
+                    } else {
+                        cells[index].className = 'grid-cell ratelimit';
+                        cells[index].innerText = res.status;
+                    }
+                } catch (err) {
+                    cells[index].className = 'grid-cell ratelimit';
+                    cells[index].innerText = 'ERR';
+                }
+            });
+
+            await Promise.all(promises);
+            // Refresh health check sau stress test
+            setTimeout(checkHealth, 2000);
+        });
+
+        // Xem Metrics
+        document.getElementById('btn-fetch-metrics').addEventListener('click', async () => {
+            const metricsOutput = document.getElementById('metrics-output');
+            metricsOutput.innerText = "Đang tải dữ liệu...";
+            try {
+                const res = await fetch(`${API_URL}/metrics`, {
+                    headers: {
+                        'X-API-Key': API_KEY
+                    }
+                });
+                const data = await res.json();
+                metricsOutput.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                metricsOutput.innerText = `Lỗi: ${err.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
